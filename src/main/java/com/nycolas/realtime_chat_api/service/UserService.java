@@ -3,6 +3,7 @@ package com.nycolas.realtime_chat_api.service;
 import com.nycolas.realtime_chat_api.domain.User;
 import com.nycolas.realtime_chat_api.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -15,5 +16,9 @@ public class UserService {
 
     public User createUser(User user) {
         return userRepository.save(user);
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }
