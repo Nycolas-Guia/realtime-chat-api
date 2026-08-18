@@ -23,12 +23,11 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Construtor vazio (obrigatório para o JPA)
     public User() {
         this.createdAt = LocalDateTime.now();
     }
 
-    // Getters e Setters
+    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
