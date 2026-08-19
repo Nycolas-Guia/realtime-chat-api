@@ -32,16 +32,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                // Define que a API é Stateless (sem sessão nativa do Tomcat/Browser)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Rotas Públicas (Qualquer um pode acessar)
+                        // Libera as rotas de autenticação e cadastro
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        // Rotas Privadas (Todas as outras)
+
+                        .requestMatchers("/ws-chat/**").permitAll()
+
+                        // Exige autenticação para todo o resto
                         .anyRequest().authenticated()
                 )
-                // Adiciona o nosso SecurityFilter ANTES do filtro padrão de autenticação do Spring
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
