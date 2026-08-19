@@ -29,9 +29,7 @@ export function AuthProvider({ children }) {
      */
     async function login({ email, password }) {
         const response = await api.post("/api/auth/login", { email, password });
-
         const jwtToken = response.data.token;
-
         const userData = { email };
 
         localStorage.setItem(TOKEN_KEY, jwtToken);

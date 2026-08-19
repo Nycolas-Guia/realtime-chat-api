@@ -10,19 +10,15 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    /**
-     * Registra os endpoints HTTP que os clientes usarão para iniciar a conexão WebSocket (Handshake).
-     */
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-chat")
-                .setAllowedOriginPatterns("*") // Permite que frontends hospedados em outros domínios se conectem
-                .withSockJS(); // Fornece opções de fallback caso o navegador do usuário bloqueie WebSockets nativos
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 
-    /**
-     * Configura o Message Broker (o "carteiro" responsável por rotear as mensagens em tempo real).
-     */
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic");

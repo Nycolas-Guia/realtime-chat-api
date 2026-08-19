@@ -6,7 +6,6 @@ import { useAuth } from "../context/AuthContext";
 import { useWebSocket } from "../hooks/useWebSocket";
 import api from "../services/api";
 
-const DEFAULT_ROOM_ID = "geral";
 
 function formatTime(timestamp) {
     const date = timestamp ? new Date(timestamp) : new Date();
@@ -19,15 +18,18 @@ function formatTime(timestamp) {
 export default function ChatPage() {
     const { user } = useAuth();
 
-    const [activeRoomId, setActiveRoomId] = useState(DEFAULT_ROOM_ID);
+    const [activeRoomId, setActiveRoomId] = useState(null);
     const [history, setHistory] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
 
     const { messages: realtimeMessages, connected } = useWebSocket(activeRoomId);
     const messagesEndRef = useRef(null);
 
+
     // Busca o histórico sempre que a sala ativa mudar
     useEffect(() => {
+        if (!activeRoomId) return;
+
         let ignore = false;
 
         async function fetchHistory() {
@@ -62,13 +64,9 @@ export default function ChatPage() {
         async (text) => {
             try {
                 await api.post("/api/messages", {
-                    roomId: activeRoomId,
                     content: text,
-                    sender: user?.username,
+                    roomId: activeRoomId,
                 });
-                // Não inserimos a mensagem manualmente no estado:
-                // ela retorna via broadcast STOMP em /topic/room/{roomId}
-                // e cai automaticamente em `realtimeMessages`.
             } catch (err) {
                 console.error("Erro ao enviar mensagem:", err);
             }
@@ -113,16 +111,15 @@ export default function ChatPage() {
                     ) : (
                         allMessages.map((msg, index) => {
                             const prevMsg = allMessages[index - 1];
-                            // Agrupa visualmente mensagens seguidas do mesmo remetente
-                            const isGrouped = prevMsg?.sender === msg.sender;
+                            const isGrouped = prevMsg?.senderName === msg.senderName;
 
                             return (
                                 <ChatBubble
-                                    key={msg.id ?? `${msg.sender}-${index}`}
-                                    sender={msg.sender}
+                                    key={msg.id ?? `${msg.senderName}-${index}`}
+                                    sender={msg.senderName}
                                     time={formatTime(msg.timestamp)}
                                     text={msg.content}
-                                    isOwnMessage={msg.sender === user?.username}
+                                    isOwnMessage={msg.senderName === user?.email}
                                     isGrouped={isGrouped}
                                 />
                             );
