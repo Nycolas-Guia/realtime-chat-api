@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import api from "../services/api";
+import api, { API_BASE_URL } from "../services/api";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
 export default function Sidebar({ activeRoomId, onSelectRoom }) {
     const { user, logout } = useAuth();
@@ -11,21 +13,69 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
         api.get("/api/rooms")
             .then((response) => {
                 setRooms(response.data);
+                // Se o usuário acabou de logar e não tem sala ativa, entra na primeira
                 if (response.data.length > 0 && !activeRoomId) {
                     onSelectRoom(response.data[0].id);
                 }
             })
             .catch((err) => console.error("Erro ao carregar salas", err));
-    }, [activeRoomId, onSelectRoom]);
+
+        // Dependências vazias = só faz o GET na primeira vez que a barra lateral aparece na tela
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem("@chat-app:token");
+
+        const client = new Client({
+            webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws-chat`),
+            connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+
+            debug: () => { },
+
+            onConnect: () => {
+                client.subscribe('/topic/rooms', (frame) => {
+                    try {
+                        const newRoom = JSON.parse(frame.body);
+
+                        setRooms((prevRooms) => {
+                            // "Optimistic UI": Verifica se a sala já existe na tela
+                            // Evita duplicar a sala para o usuário que acabou de criá-la via HTTP
+                            const alreadyExists = prevRooms.some(room => room.id === newRoom.id);
+
+                            if (alreadyExists) {
+                                return prevRooms;
+                            }
+
+                            return [...prevRooms, newRoom];
+                        });
+                    } catch (err) {
+                        console.error("Falha ao processar nova sala STOMP:", err);
+                    }
+                });
+            }
+        });
+
+        client.activate();
+
+        // Cleanup: encerra essa conexão caso o componente seja destruído
+        return () => {
+            client.deactivate();
+        };
+    }, []);
 
     async function handleCreateRoom(e) {
         e.preventDefault();
         if (!newRoomName.trim()) return;
+
         try {
             const response = await api.post("/api/rooms", { name: newRoomName });
+
+            // Adiciona a sala instantaneamente para quem clicou (Optimistic UI)
             setRooms((prev) => [...prev, response.data]);
             setNewRoomName("");
-            onSelectRoom(response.data.id); // Já entra na sala criada
+            onSelectRoom(response.data.id);
+
         } catch (err) {
             console.error("Erro ao criar sala", err);
         }
@@ -76,6 +126,7 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
                 </form>
             </nav>
 
+            {/* Perfil do Usuário no rodapé */}
             <div className="flex items-center gap-2 bg-discord-bg-tertiary/60 p-2">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-discord-blurple text-sm font-semibold text-white">
                     {user?.email?.charAt(0)?.toUpperCase() ?? "?"}
