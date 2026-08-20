@@ -20,6 +20,30 @@ services:
     ports:
       - "8080:8080"
 
+  backend:
+    build:
+      context: .
+    container_name: realtime_chat_api
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/realtime_chat
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=1234
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: realtime_chat_web
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
     name: realtime_chat_pgdata
