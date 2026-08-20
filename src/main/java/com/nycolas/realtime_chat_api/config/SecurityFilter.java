@@ -25,10 +25,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Intercepta a requisição, extrai o token JWT (se existir), valida e insere
-     * o contexto de autenticação no Spring Security para aquela transação específica.
-     */
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         var token = this.recoverToken(request);
@@ -49,10 +46,6 @@ public class SecurityFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Recupera o token do cabeçalho 'Authorization'.
-     * O padrão HTTP exige o formato "Bearer <token>".
-     */
     private String recoverToken(HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
         if (authHeader == null) return null;
