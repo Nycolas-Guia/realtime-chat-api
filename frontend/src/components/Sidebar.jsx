@@ -34,7 +34,9 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
             debug: () => { },
 
             onConnect: () => {
-                client.subscribe('/topic/rooms', (frame) => {
+                const privateChannel = `/topic/user/${user.email}/rooms`;
+
+                client.subscribe(privateChannel, (frame) => {
                     try {
                         const newRoom = JSON.parse(frame.body);
 

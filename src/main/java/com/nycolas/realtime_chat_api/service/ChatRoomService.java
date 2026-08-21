@@ -44,18 +44,17 @@ public class ChatRoomService {
         newRoom.getMembers().add(creator);
 
         ChatRoom savedRoom = chatRoomRepository.save(newRoom);
-
         ChatRoomResponseDTO responseDTO = new ChatRoomResponseDTO(savedRoom);
-        messagingTemplate.convertAndSend("/topic/rooms", responseDTO);
 
+        messagingTemplate.convertAndSend("/topic/user/" + creatorEmail + "/rooms", responseDTO);
         return savedRoom;
     }
 
     /**
      * Retorna todas as salas.
      */
-    public List<ChatRoom> getAllRooms() {
-        return chatRoomRepository.findAll();
+    public List<ChatRoom> getUserRooms(String userEmail) {
+        return chatRoomRepository.findRoomsByUserEmail(userEmail);
     }
 
     /**

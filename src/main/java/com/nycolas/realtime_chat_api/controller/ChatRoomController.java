@@ -50,8 +50,10 @@ public class ChatRoomController {
      * Converte a lista de entidades para uma lista de DTOs antes de retornar.
      */
     @GetMapping
-    public ResponseEntity<List<ChatRoomResponseDTO>> getAllRooms() {
-        List<ChatRoomResponseDTO> rooms = chatRoomService.getAllRooms().stream()
+    public ResponseEntity<List<ChatRoomResponseDTO>> getUserRooms(Authentication authentication) {
+        String userEmail = authentication.getName(); // Pega o e-mail do token
+
+        List<ChatRoomResponseDTO> rooms = chatRoomService.getUserRooms(userEmail).stream()
                 .map(ChatRoomResponseDTO::new)
                 .collect(Collectors.toList());
 
