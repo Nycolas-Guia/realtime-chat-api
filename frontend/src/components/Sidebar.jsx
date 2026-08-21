@@ -39,14 +39,10 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
                         const newRoom = JSON.parse(frame.body);
 
                         setRooms((prevRooms) => {
-                            // "Optimistic UI": Verifica se a sala já existe na tela
-                            // Evita duplicar a sala para o usuário que acabou de criá-la via HTTP
                             const alreadyExists = prevRooms.some(room => room.id === newRoom.id);
-
                             if (alreadyExists) {
                                 return prevRooms;
                             }
-
                             return [...prevRooms, newRoom];
                         });
                     } catch (err) {
@@ -70,10 +66,9 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
 
         try {
             const response = await api.post("/api/rooms", { name: newRoomName });
-
-            // Adiciona a sala instantaneamente para quem clicou (Optimistic UI)
-            setRooms((prev) => [...prev, response.data]);
+            // Limpa o input
             setNewRoomName("");
+            // Seleciona a nova sala criada
             onSelectRoom(response.data.id);
 
         } catch (err) {
