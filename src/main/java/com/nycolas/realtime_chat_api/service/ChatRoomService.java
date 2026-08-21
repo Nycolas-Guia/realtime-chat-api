@@ -67,7 +67,7 @@ public class ChatRoomService {
         ChatRoom room = chatRoomRepository.findByIdWithMembers(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
 
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameIgnoreCase(username);
 
         if (user == null) {
             throw new IllegalArgumentException("Usuário @" + username + " não encontrado.");

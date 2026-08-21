@@ -28,7 +28,7 @@ public class FriendshipService {
     @Transactional
     public void sendFriendRequest(String senderEmail, String receiverUsername) {
         User sender = (User) userRepository.findByEmail(senderEmail);
-        User receiver = userRepository.findByUsername(receiverUsername.toLowerCase());
+        User receiver = userRepository.findByUsernameIgnoreCase(receiverUsername.toLowerCase());
 
         if (receiver == null) {
             throw new IllegalArgumentException("Usuário @" + receiverUsername + " não encontrado.");

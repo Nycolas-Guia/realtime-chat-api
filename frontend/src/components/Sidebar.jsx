@@ -155,7 +155,7 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
             {/* Perfil do Usuário no rodapé */}
             <div className="flex items-center gap-2 bg-discord-bg-tertiary/60 p-2">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-discord-blurple text-sm font-semibold text-white">
-                    {displayUser.charAt(0).toUpperCase()}
+                    {displayUser.charAt(0)}
                 </div>
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-white">

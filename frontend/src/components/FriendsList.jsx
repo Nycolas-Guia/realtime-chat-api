@@ -1,115 +1,152 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AddFriendModal from "./AddFriendModal";
-
-// Dados de exemplo — substituir pelos dados vindos da API.
-const MOCK_FRIENDS = [
-    { id: 1, name: "ana.silva", status: "online" },
-    { id: 2, name: "bruno_dev", status: "online" },
-    { id: 3, name: "carla.souza", status: "offline" },
-    { id: 4, name: "diego99", status: "offline" },
-];
-
-const MOCK_PENDING = [
-    { id: 5, name: "eduardo.lima", direction: "sent" },
-    { id: 6, name: "fernanda.rocha", direction: "received" },
-];
+import api from "../services/api";
 
 const TABS = [
-    { id: "online", label: "Online" },
     { id: "all", label: "Todos" },
     { id: "pending", label: "Pendentes" },
 ];
 
-function FriendRow({ name, status }) {
+function FriendRow({ displayName, username }) {
     return (
         <li className="flex items-center gap-3 rounded px-2 py-2 hover:bg-discord-bg-primary/60">
-            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-discord-blurple text-sm font-semibold text-white">
-                {name.charAt(0).toUpperCase()}
-                <span
-                    className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-discord-bg-primary ${
-                        status === "online" ? "bg-discord-green" : "bg-discord-text-muted"
-                    }`}
-                />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-discord-blurple text-sm font-semibold text-white">
+                {displayName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-discord-text-normal">{name}</p>
-                <p className="truncate text-xs text-discord-text-muted">
-                    {status === "online" ? "Online" : "Offline"}
-                </p>
+                <p className="truncate text-sm font-medium text-discord-text-normal">{displayName}</p>
+                <p className="truncate text-xs text-discord-text-muted">@{username}</p>
             </div>
         </li>
     );
 }
 
-function PendingRow({ name, direction }) {
-    const isReceived = direction === "received";
+function PendingRow({ friendshipId, displayName, username, onAccept, onReject, processingId }) {
+    const isProcessing = processingId === friendshipId;
 
     return (
         <li className="flex items-center gap-3 rounded px-2 py-2 hover:bg-discord-bg-primary/60">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-discord-blurple text-sm font-semibold text-white">
-                {name.charAt(0).toUpperCase()}
+                {displayName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-discord-text-normal">{name}</p>
-                <p className="truncate text-xs text-discord-text-muted">
-                    {isReceived ? "Pedido recebido" : "Pedido enviado"}
-                </p>
+                <p className="truncate text-sm font-medium text-discord-text-normal">{displayName}</p>
+                <p className="truncate text-xs text-discord-text-muted">@{username}</p>
             </div>
-            {isReceived ? (
-                <div className="flex shrink-0 gap-1.5">
-                    <button
-                        type="button"
-                        className="rounded-full bg-discord-bg-primary p-1.5 text-discord-green hover:bg-discord-green hover:text-white"
-                        title="Aceitar"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </button>
-                    <button
-                        type="button"
-                        className="rounded-full bg-discord-bg-primary p-1.5 text-discord-red hover:bg-discord-red hover:text-white"
-                        title="Recusar"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            ) : (
-                <span className="shrink-0 text-xs text-discord-text-muted">Aguardando</span>
-            )}
+            <div className="flex shrink-0 gap-1.5">
+                <button
+                    type="button"
+                    onClick={() => onAccept(friendshipId)}
+                    disabled={isProcessing}
+                    className="rounded-full bg-discord-bg-primary p-1.5 text-discord-green hover:bg-discord-green hover:text-white disabled:opacity-50"
+                    title="Aceitar"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onReject(friendshipId)}
+                    disabled={isProcessing}
+                    className="rounded-full bg-discord-bg-primary p-1.5 text-discord-red hover:bg-discord-red hover:text-white disabled:opacity-50"
+                    title="Recusar"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
         </li>
     );
 }
 
 export default function FriendsList() {
-    const [activeTab, setActiveTab] = useState("online");
+    const [activeTab, setActiveTab] = useState("all");
     const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
+    const [friends, setFriends] = useState([]);
+    const [pending, setPending] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [processingId, setProcessingId] = useState(null);
 
-    const onlineFriends = MOCK_FRIENDS.filter((f) => f.status === "online");
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [friendsRes, pendingRes] = await Promise.all([
+                api.get("/api/friends"),
+                api.get("/api/friends/pending")
+            ]);
+            setFriends(friendsRes.data ?? []);
+            setPending(pendingRes.data ?? []);
+        } catch (err) {
+            console.error("Erro ao carregar dados de amigos:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const handleAccept = async (id) => {
+        setProcessingId(id);
+        try {
+            await api.post(`/api/friends/${id}/accept`);
+            await fetchData();
+        } catch (err) {
+            console.error("Erro ao aceitar pedido:", err);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleReject = async (id) => {
+        setProcessingId(id);
+        try {
+            await api.delete(`/api/friends/${id}/reject`);
+            await fetchData();
+        } catch (err) {
+            console.error("Erro ao recusar pedido:", err);
+        } finally {
+            setProcessingId(null);
+        }
+    };
 
     let content;
-    if (activeTab === "pending") {
+    if (loading) {
+        content = <p className="px-2 text-sm text-discord-text-muted">Carregando...</p>;
+    } else if (activeTab === "pending") {
         content =
-            MOCK_PENDING.length === 0 ? (
+            pending.length === 0 ? (
                 <p className="px-2 text-sm text-discord-text-muted">Nenhum pedido pendente.</p>
             ) : (
                 <ul className="space-y-0.5">
-                    {MOCK_PENDING.map((p) => (
-                        <PendingRow key={p.id} name={p.name} direction={p.direction} />
+                    {pending.map((p) => (
+                        <PendingRow
+                            key={p.friendshipId}
+                            friendshipId={p.friendshipId}
+                            displayName={p.displayName}
+                            username={p.username}
+                            onAccept={handleAccept}
+                            onReject={handleReject}
+                            processingId={processingId}
+                        />
                     ))}
                 </ul>
             );
     } else {
-        const list = activeTab === "online" ? onlineFriends : MOCK_FRIENDS;
         content =
-            list.length === 0 ? (
+            friends.length === 0 ? (
                 <p className="px-2 text-sm text-discord-text-muted">Nenhum amigo por aqui ainda.</p>
             ) : (
                 <ul className="space-y-0.5">
-                    {list.map((f) => (
-                        <FriendRow key={f.id} name={f.name} status={f.status} />
+                    {friends.map((f) => (
+                        <FriendRow
+                            key={f.friendshipId}
+                            displayName={f.displayName}
+                            username={f.username}
+                        />
                     ))}
                 </ul>
             );
@@ -117,7 +154,6 @@ export default function FriendsList() {
 
     return (
         <div className="flex h-full flex-col">
-            {/* Cabeçalho da aba de amigos */}
             <div className="border-b border-discord-border px-3 py-3">
                 <button
                     type="button"
@@ -131,7 +167,6 @@ export default function FriendsList() {
                 </button>
             </div>
 
-            {/* Abas Online / Todos / Pendentes */}
             <div className="flex gap-1 border-b border-discord-border px-2 py-2">
                 {TABS.map((tab) => (
                     <button
@@ -145,9 +180,9 @@ export default function FriendsList() {
                         }`}
                     >
                         {tab.label}
-                        {tab.id === "pending" && MOCK_PENDING.length > 0 && (
+                        {tab.id === "pending" && pending.length > 0 && (
                             <span className="ml-1.5 rounded-full bg-discord-red px-1.5 py-0.5 text-[10px] text-white">
-                                {MOCK_PENDING.length}
+                                {pending.length}
                             </span>
                         )}
                     </button>
@@ -156,7 +191,11 @@ export default function FriendsList() {
 
             <div className="flex-1 overflow-y-auto px-2 py-2">{content}</div>
 
-            <AddFriendModal isOpen={isAddFriendOpen} onClose={() => setIsAddFriendOpen(false)} />
+            <AddFriendModal
+                isOpen={isAddFriendOpen}
+                onClose={() => setIsAddFriendOpen(false)}
+                onRequestSent={fetchData}
+            />
         </div>
     );
 }
