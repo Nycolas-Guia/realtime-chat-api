@@ -17,14 +17,11 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
         api.get("/api/rooms")
             .then((response) => {
                 setRooms(response.data);
-                // Se o usuário acabou de logar e não tem sala ativa, entra na primeira
                 if (response.data.length > 0 && !activeRoomId) {
                     onSelectRoom(response.data[0].id);
                 }
             })
             .catch((err) => console.error("Erro ao carregar salas", err));
-
-        // Dependências vazias = só faz o GET na primeira vez que a barra lateral aparece na tela
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -34,21 +31,16 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
         const client = new Client({
             webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws-chat`),
             connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
-
             debug: () => { },
-
             onConnect: () => {
                 const privateChannel = `/topic/user/${user.email}/rooms`;
 
                 client.subscribe(privateChannel, (frame) => {
                     try {
                         const newRoom = JSON.parse(frame.body);
-
                         setRooms((prevRooms) => {
                             const alreadyExists = prevRooms.some(room => room.id === newRoom.id);
-                            if (alreadyExists) {
-                                return prevRooms;
-                            }
+                            if (alreadyExists) return prevRooms;
                             return [...prevRooms, newRoom];
                         });
                     } catch (err) {
@@ -59,11 +51,7 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
         });
 
         client.activate();
-
-        // Cleanup: encerra essa conexão caso o componente seja destruído
-        return () => {
-            client.deactivate();
-        };
+        return () => client.deactivate();
     }, []);
 
     async function handleCreateRoom(e) {
@@ -72,15 +60,15 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
 
         try {
             const response = await api.post("/api/rooms", { name: newRoomName });
-            // Limpa o input
             setNewRoomName("");
-            // Seleciona a nova sala criada
             onSelectRoom(response.data.id);
-
         } catch (err) {
             console.error("Erro ao criar sala", err);
         }
     }
+
+    // Lógica para descobrir qual nome exibir no rodapé
+    const displayUser = user?.displayName || user?.username || user?.email?.split('@')[0] || "Usuário";
 
     return (
         <aside className="flex h-full w-60 flex-col bg-discord-bg-secondary">
@@ -148,7 +136,6 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
                         })}
                     </ul>
 
-                    {/* Input para criar sala */}
                     <form onSubmit={handleCreateRoom} className="px-2">
                         <input
                             type="text"
@@ -168,11 +155,11 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
             {/* Perfil do Usuário no rodapé */}
             <div className="flex items-center gap-2 bg-discord-bg-tertiary/60 p-2">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-discord-blurple text-sm font-semibold text-white">
-                    {user?.email?.charAt(0)?.toUpperCase() ?? "?"}
+                    {displayUser.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-white">
-                        {user?.email?.split('@')[0] ?? "Usuário"}
+                        {displayUser}
                     </p>
                     <p className="truncate text-xs text-discord-text-muted">Online</p>
                 </div>

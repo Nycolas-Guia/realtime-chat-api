@@ -126,15 +126,17 @@ export default function ChatPage() {
                     ) : (
                         allMessages.map((msg, index) => {
                             const prevMsg = allMessages[index - 1];
-                            const isGrouped = prevMsg?.senderName === msg.senderName;
+
+                            // Agrupa as mensagens se forem da mesma pessoa (usando o email)
+                            const isGrouped = prevMsg?.senderEmail === msg.senderEmail;
 
                             return (
                                 <ChatBubble
-                                    key={msg.id ?? `${msg.senderName}-${index}`}
-                                    sender={msg.senderName}
+                                    key={msg.id ?? `${msg.senderEmail}-${index}`}
+                                    sender={msg.senderDisplayName}
                                     time={formatTime(msg.timestamp)}
                                     text={msg.content}
-                                    isOwnMessage={msg.senderName === user?.email}
+                                    isOwnMessage={msg.senderEmail === user?.email}
                                     isGrouped={isGrouped}
                                 />
                             );
