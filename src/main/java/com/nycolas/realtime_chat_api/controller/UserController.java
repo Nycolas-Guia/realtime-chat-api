@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication; // <-- Importação da 
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,8 +28,8 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO request) {
 
         User newUser = new User();
-        newUser.setUsername(request.username());
-        newUser.setEmail(request.email());
+        newUser.setUsername(request.username().toLowerCase());
+        newUser.setEmail(request.email().toLowerCase());
         newUser.setPassword(request.password());
 
         User createdUser = userService.createUser(newUser);

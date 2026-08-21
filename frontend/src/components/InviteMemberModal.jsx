@@ -13,10 +13,13 @@ export default function InviteMemberModal({ isOpen, onClose, roomName, roomId })
         setLoading(true);
 
         try {
-            await api.post(`/api/rooms/${roomId}/members`, { username });
+            await api.post(`/api/rooms/${roomId}/members`, {
+                username: username.toLowerCase()
+            });
 
             setUsername("");
             onClose();
+
         } catch (err) {
             const backendMessage = err?.response?.data?.message;
             setError(backendMessage ?? "Não foi possível enviar o convite. Verifique o username.");

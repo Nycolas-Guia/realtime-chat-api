@@ -18,8 +18,8 @@ export default function RegisterPage() {
 
         try {
             await api.post("/api/users", {
-                username,
-                email,
+                username: username.toLowerCase(),
+                email: email.toLowerCase(),
                 password
             });
 

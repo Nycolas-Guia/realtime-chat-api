@@ -69,7 +69,7 @@ public class ChatRoomController {
             @PathVariable UUID roomId,
             @RequestBody @Valid InviteMemberRequestDTO request) {
 
-        chatRoomService.addMember(roomId, request.username());
+        chatRoomService.addMember(roomId, request.username().toLowerCase());
 
         return ResponseEntity.ok().build();
     }
