@@ -1,14 +1,31 @@
 import { useState } from "react";
 import Modal from "./Modal";
+import api from "../services/api"; // 1. Importa a nossa API conectada ao backend
 
-export default function InviteMemberModal({ isOpen, onClose, roomName }) {
+// 2. Adicionamos o roomId aqui nas props!
+export default function InviteMemberModal({ isOpen, onClose, roomName, roomId }) {
     const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    // A integração com a API fica por conta do usuário.
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setEmail("");
-        onClose();
+        setError("");
+        setLoading(true);
+
+        try {
+            // 3. O "Cabo" conectado: Faz o POST para adicionar o membro
+            await api.post(`/api/rooms/${roomId}/members`, { email });
+
+            // Sucesso! Limpa o input e fecha o modal
+            setEmail("");
+            onClose();
+        } catch (err) {
+            const backendMessage = err?.response?.data?.message;
+            setError(backendMessage ?? "Não foi possível enviar o convite. Verifique o e-mail.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -18,6 +35,13 @@ export default function InviteMemberModal({ isOpen, onClose, roomName }) {
                 <span className="font-semibold text-discord-text-normal">#{roomName}</span> pelo
                 e-mail.
             </p>
+
+            {/* Mensagem de erro caso o backend recuse (ex: usuário não existe) */}
+            {error && (
+                <div className="mb-4 rounded bg-discord-red/10 px-3 py-2 text-sm text-discord-red">
+                    {error}
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -42,16 +66,17 @@ export default function InviteMemberModal({ isOpen, onClose, roomName }) {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded px-4 py-2 text-sm font-medium text-discord-text-muted hover:underline"
+                        disabled={loading}
+                        className="rounded px-4 py-2 text-sm font-medium text-discord-text-muted hover:underline disabled:opacity-60"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        disabled={!email.trim()}
+                        disabled={!email.trim() || loading}
                         className="rounded bg-discord-blurple px-4 py-2 text-sm font-medium text-white hover:bg-discord-blurple-hover disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        Enviar Convite
+                        {loading ? "Enviando..." : "Enviar Convite"}
                     </button>
                 </div>
             </form>

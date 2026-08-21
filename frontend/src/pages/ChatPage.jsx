@@ -157,6 +157,7 @@ export default function ChatPage() {
                 isOpen={isInviteOpen}
                 onClose={() => setIsInviteOpen(false)}
                 roomName={activeRoomId}
+                roomId={activeRoomId}
             />
         </div>
     );

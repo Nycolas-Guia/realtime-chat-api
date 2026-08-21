@@ -8,6 +8,7 @@ import com.nycolas.realtime_chat_api.repository.UserRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -60,8 +61,10 @@ public class ChatRoomService {
     /**
      * Adiciona um usuário existente a uma sala de chat.
      */
+    @Transactional
     public void addMember(UUID roomId, String userEmail) {
-        ChatRoom room = chatRoomRepository.findById(roomId)
+        // Usa a busca com JOIN FETCH para garantir que os membros venham carregados na sessão
+        ChatRoom room = chatRoomRepository.findByIdWithMembers(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
 
         UserDetails userDetails = userRepository.findByEmail(userEmail);
@@ -71,6 +74,7 @@ public class ChatRoomService {
 
         User user = (User) userDetails;
 
+        // Adiciona o usuário na lista (agora a coleção está inicializada com sucesso!)
         room.getMembers().add(user);
 
         chatRoomRepository.save(room);
