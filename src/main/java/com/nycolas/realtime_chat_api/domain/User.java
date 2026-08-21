@@ -7,7 +7,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -29,6 +31,9 @@ public class User implements UserDetails {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
+    private Set<ChatRoom> rooms = new HashSet<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -44,7 +49,6 @@ public class User implements UserDetails {
         return this.password;
     }
 
-    // As regras abaixo liberam o acesso da conta. (Não estão expiradas nem bloqueadas)
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -81,4 +85,7 @@ public class User implements UserDetails {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Set<ChatRoom> getRooms() { return rooms; }
+    public void setRooms(Set<ChatRoom> rooms) { this.rooms = rooms; }
 }
