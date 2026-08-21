@@ -2,36 +2,36 @@ import { useState } from "react";
 import Modal from "./Modal";
 
 export default function AddFriendModal({ isOpen, onClose }) {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
 
     // A integração com a API fica por conta do usuário.
     const handleSubmit = (e) => {
         e.preventDefault();
-        setEmail("");
+        setUsername("");
         onClose();
     };
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Adicionar Amigo">
             <p className="mb-4 text-sm text-discord-text-muted">
-                Você pode adicionar um amigo com o e-mail dele.
+                Você pode adicionar um amigo com o nome de usuário dele.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label
-                        htmlFor="friend-email"
+                        htmlFor="friend-username"
                         className="mb-1.5 block text-xs font-semibold uppercase text-discord-text-muted"
                     >
                         E-mail
                     </label>
                     <input
-                        id="friend-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        id="invite-username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         required
-                        placeholder="amigo@exemplo.com"
+                        placeholder="Ex: noob_saibot"
                         className="w-full rounded border-none bg-discord-bg-input px-3 py-2.5 text-sm text-discord-text-normal outline-none ring-1 ring-transparent focus:ring-discord-blurple"
                     />
                 </div>

@@ -1,10 +1,9 @@
 import { useState } from "react";
 import Modal from "./Modal";
-import api from "../services/api"; // 1. Importa a nossa API conectada ao backend
+import api from "../services/api";
 
-// 2. Adicionamos o roomId aqui nas props!
 export default function InviteMemberModal({ isOpen, onClose, roomName, roomId }) {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -14,15 +13,13 @@ export default function InviteMemberModal({ isOpen, onClose, roomName, roomId })
         setLoading(true);
 
         try {
-            // 3. O "Cabo" conectado: Faz o POST para adicionar o membro
-            await api.post(`/api/rooms/${roomId}/members`, { email });
+            await api.post(`/api/rooms/${roomId}/members`, { username });
 
-            // Sucesso! Limpa o input e fecha o modal
-            setEmail("");
+            setUsername("");
             onClose();
         } catch (err) {
             const backendMessage = err?.response?.data?.message;
-            setError(backendMessage ?? "Não foi possível enviar o convite. Verifique o e-mail.");
+            setError(backendMessage ?? "Não foi possível enviar o convite. Verifique o username.");
         } finally {
             setLoading(false);
         }
@@ -33,10 +30,9 @@ export default function InviteMemberModal({ isOpen, onClose, roomName, roomId })
             <p className="mb-4 text-sm text-discord-text-muted">
                 Convide alguém para entrar em{" "}
                 <span className="font-semibold text-discord-text-normal">#{roomName}</span> pelo
-                e-mail.
+                nome de usuário.
             </p>
 
-            {/* Mensagem de erro caso o backend recuse (ex: usuário não existe) */}
             {error && (
                 <div className="mb-4 rounded bg-discord-red/10 px-3 py-2 text-sm text-discord-red">
                     {error}
@@ -46,18 +42,18 @@ export default function InviteMemberModal({ isOpen, onClose, roomName, roomId })
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label
-                        htmlFor="invite-email"
+                        htmlFor="invite-username"
                         className="mb-1.5 block text-xs font-semibold uppercase text-discord-text-muted"
                     >
-                        E-mail
+                        Nome de Usuário
                     </label>
                     <input
-                        id="invite-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        id="invite-username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         required
-                        placeholder="pessoa@exemplo.com"
+                        placeholder="Ex: nycolas_guia"
                         className="w-full rounded border-none bg-discord-bg-input px-3 py-2.5 text-sm text-discord-text-normal outline-none ring-1 ring-transparent focus:ring-discord-blurple"
                     />
                 </div>
@@ -73,7 +69,7 @@ export default function InviteMemberModal({ isOpen, onClose, roomName, roomId })
                     </button>
                     <button
                         type="submit"
-                        disabled={!email.trim() || loading}
+                        disabled={!username.trim() || loading}
                         className="rounded bg-discord-blurple px-4 py-2 text-sm font-medium text-white hover:bg-discord-blurple-hover disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {loading ? "Enviando..." : "Enviar Convite"}

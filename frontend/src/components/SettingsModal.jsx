@@ -1,21 +1,29 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 
 const SECTIONS = [
     { id: "account", label: "Minha Conta" },
     { id: "security", label: "Alterar Senha" },
 ];
 
-function AccountSection({ username, setUsername, email, setEmail, avatarPreview, onAvatarChange }) {
+function AccountSection({ displayName, setDisplayName, email, avatarPreview, onAvatarChange, onSave, loading, status }) {
     return (
-        <div className="space-y-6">
+        <form onSubmit={onSave} className="space-y-6">
+            {/* Status Feedback */}
+            {status.message && (
+                <div className={`rounded px-3 py-2 text-sm ${status.type === "error" ? "bg-discord-red/10 text-discord-red" : "bg-discord-green/10 text-discord-green"}`}>
+                    {status.message}
+                </div>
+            )}
+
             {/* Foto de perfil */}
             <div className="flex items-center gap-4">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-discord-blurple text-xl font-semibold text-white">
                     {avatarPreview ? (
                         <img src={avatarPreview} alt="Prévia da foto de perfil" className="h-full w-full object-cover" />
                     ) : (
-                        (username || "?").charAt(0).toUpperCase()
+                        (displayName || "?").charAt(0).toUpperCase()
                     )}
                 </div>
                 <label className="cursor-pointer rounded bg-discord-bg-primary px-3 py-2 text-sm font-medium text-discord-text-normal hover:bg-discord-bg-input">
@@ -25,37 +33,39 @@ function AccountSection({ username, setUsername, email, setEmail, avatarPreview,
             </div>
 
             <div>
-                <label htmlFor="settings-username" className="mb-1.5 block text-xs font-semibold uppercase text-discord-text-muted">
-                    Nome de Usuário
+                <label htmlFor="settings-displayname" className="mb-1.5 block text-xs font-semibold uppercase text-discord-text-muted">
+                    Apelido (Display Name)
                 </label>
                 <input
-                    id="settings-username"
+                    id="settings-displayname"
                     type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
                     className="w-full rounded border-none bg-discord-bg-input px-3 py-2.5 text-sm text-discord-text-normal outline-none ring-1 ring-transparent focus:ring-discord-blurple"
+                    placeholder="Como você quer ser chamado?"
                 />
             </div>
 
             <div>
                 <label htmlFor="settings-email" className="mb-1.5 block text-xs font-semibold uppercase text-discord-text-muted">
-                    E-mail
+                    E-mail (Apenas leitura)
                 </label>
                 <input
                     id="settings-email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded border-none bg-discord-bg-input px-3 py-2.5 text-sm text-discord-text-normal outline-none ring-1 ring-transparent focus:ring-discord-blurple"
+                    disabled
+                    className="w-full cursor-not-allowed rounded border-none bg-discord-bg-primary px-3 py-2.5 text-sm text-discord-text-muted outline-none opacity-70"
                 />
             </div>
 
             <div className="flex justify-end">
                 <button
-                    type="button"
-                    className="rounded bg-discord-blurple px-4 py-2 text-sm font-medium text-white hover:bg-discord-blurple-hover"
+                    type="submit"
+                    disabled={loading}
+                    className="rounded bg-discord-blurple px-4 py-2 text-sm font-medium text-white hover:bg-discord-blurple-hover disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    Salvar Alterações
+                    {loading ? "Salvando..." : "Salvar Alterações"}
                 </button>
             </div>
 
@@ -72,13 +82,20 @@ function AccountSection({ username, setUsername, email, setEmail, avatarPreview,
                     Excluir Conta
                 </button>
             </div>
-        </div>
+        </form>
     );
 }
 
-function SecuritySection({ currentPassword, setCurrentPassword, newPassword, setNewPassword, confirmPassword, setConfirmPassword }) {
+function SecuritySection({ currentPassword, setCurrentPassword, newPassword, setNewPassword, confirmPassword, setConfirmPassword, onSave, loading, status }) {
     return (
-        <div className="space-y-4">
+        <form onSubmit={onSave} className="space-y-4">
+            {/* Status Feedback */}
+            {status.message && (
+                <div className={`rounded px-3 py-2 text-sm ${status.type === "error" ? "bg-discord-red/10 text-discord-red" : "bg-discord-green/10 text-discord-green"}`}>
+                    {status.message}
+                </div>
+            )}
+
             <div>
                 <label htmlFor="current-password" className="mb-1.5 block text-xs font-semibold uppercase text-discord-text-muted">
                     Senha Atual
@@ -86,6 +103,7 @@ function SecuritySection({ currentPassword, setCurrentPassword, newPassword, set
                 <input
                     id="current-password"
                     type="password"
+                    required
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     className="w-full rounded border-none bg-discord-bg-input px-3 py-2.5 text-sm text-discord-text-normal outline-none ring-1 ring-transparent focus:ring-discord-blurple"
@@ -100,6 +118,8 @@ function SecuritySection({ currentPassword, setCurrentPassword, newPassword, set
                 <input
                     id="new-password"
                     type="password"
+                    required
+                    minLength={6}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full rounded border-none bg-discord-bg-input px-3 py-2.5 text-sm text-discord-text-normal outline-none ring-1 ring-transparent focus:ring-discord-blurple"
@@ -114,6 +134,8 @@ function SecuritySection({ currentPassword, setCurrentPassword, newPassword, set
                 <input
                     id="confirm-password"
                     type="password"
+                    required
+                    minLength={6}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full rounded border-none bg-discord-bg-input px-3 py-2.5 text-sm text-discord-text-normal outline-none ring-1 ring-transparent focus:ring-discord-blurple"
@@ -123,13 +145,14 @@ function SecuritySection({ currentPassword, setCurrentPassword, newPassword, set
 
             <div className="flex justify-end pt-2">
                 <button
-                    type="button"
-                    className="rounded bg-discord-blurple px-4 py-2 text-sm font-medium text-white hover:bg-discord-blurple-hover"
+                    type="submit"
+                    disabled={loading}
+                    className="rounded bg-discord-blurple px-4 py-2 text-sm font-medium text-white hover:bg-discord-blurple-hover disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    Atualizar Senha
+                    {loading ? "Atualizando..." : "Atualizar Senha"}
                 </button>
             </div>
-        </div>
+        </form>
     );
 }
 
@@ -137,13 +160,20 @@ export default function SettingsModal({ isOpen, onClose }) {
     const { user } = useAuth();
 
     const [activeSection, setActiveSection] = useState("account");
-    const [username, setUsername] = useState(user?.email?.split("@")[0] ?? "");
-    const [email, setEmail] = useState(user?.email ?? "");
-    const [avatarPreview, setAvatarPreview] = useState(null);
 
+    // Estados da Minha Conta
+    const [displayName, setDisplayName] = useState(user?.displayName ?? user?.username ?? "");
+    const email = user?.email ?? "";
+    const [avatarPreview, setAvatarPreview] = useState(null);
+    const [accountLoading, setAccountLoading] = useState(false);
+    const [accountStatus, setAccountStatus] = useState({ type: "", message: "" });
+
+    // Estados da Segurança (Senha)
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [securityLoading, setSecurityLoading] = useState(false);
+    const [securityStatus, setSecurityStatus] = useState({ type: "", message: "" });
 
     if (!isOpen) return null;
 
@@ -151,11 +181,53 @@ export default function SettingsModal({ isOpen, onClose }) {
         const file = e.target.files?.[0];
         if (!file) return;
         setAvatarPreview(URL.createObjectURL(file));
+        // Nota: O envio real do arquivo para o backend exigiria um upload Multipart/FormData.
+        // Vamos focar no envio do texto (displayName) por enquanto.
+    };
+
+    // --- CONEXÃO AXIOS: Salvar Apelido ---
+    const handleSaveAccount = async (e) => {
+        e.preventDefault();
+        setAccountStatus({ type: "", message: "" });
+        setAccountLoading(true);
+
+        try {
+            await api.put("/api/users/me", { displayName });
+            setAccountStatus({ type: "success", message: "Perfil atualizado com sucesso!" });
+        } catch (error) {
+            setAccountStatus({ type: "error", message: "Erro ao atualizar o perfil." });
+        } finally {
+            setAccountLoading(false);
+        }
+    };
+
+    // --- CONEXÃO AXIOS: Alterar Senha ---
+    const handleSaveSecurity = async (e) => {
+        e.preventDefault();
+        setSecurityStatus({ type: "", message: "" });
+
+        if (newPassword !== confirmPassword) {
+            setSecurityStatus({ type: "error", message: "As novas senhas não coincidem." });
+            return;
+        }
+
+        setSecurityLoading(true);
+        try {
+            await api.put("/api/users/me", { currentPassword, newPassword });
+            setSecurityStatus({ type: "success", message: "Senha alterada com sucesso!" });
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+        } catch (error) {
+            const backendMessage = error?.response?.data?.message;
+            setSecurityStatus({ type: "error", message: backendMessage ?? "A senha atual está incorreta." });
+        } finally {
+            setSecurityLoading(false);
+        }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex bg-discord-bg-tertiary">
-            {/* Navegação lateral de seções */}
             <div className="flex w-60 shrink-0 flex-col bg-discord-bg-secondary py-6">
                 <p className="px-5 pb-2 text-xs font-semibold uppercase tracking-wide text-discord-text-muted">
                     Configurações da Conta
@@ -165,7 +237,11 @@ export default function SettingsModal({ isOpen, onClose }) {
                         <button
                             key={section.id}
                             type="button"
-                            onClick={() => setActiveSection(section.id)}
+                            onClick={() => {
+                                setActiveSection(section.id);
+                                setAccountStatus({ type: "", message: "" });
+                                setSecurityStatus({ type: "", message: "" });
+                            }}
                             className={`w-full rounded px-2.5 py-2 text-left text-sm font-medium transition-colors ${
                                 activeSection === section.id
                                     ? "bg-discord-bg-primary text-white"
@@ -178,7 +254,6 @@ export default function SettingsModal({ isOpen, onClose }) {
                 </nav>
             </div>
 
-            {/* Conteúdo da seção ativa */}
             <div className="relative flex-1 overflow-y-auto">
                 <button
                     type="button"
@@ -198,12 +273,14 @@ export default function SettingsModal({ isOpen, onClose }) {
 
                     {activeSection === "account" && (
                         <AccountSection
-                            username={username}
-                            setUsername={setUsername}
+                            displayName={displayName}
+                            setDisplayName={setDisplayName}
                             email={email}
-                            setEmail={setEmail}
                             avatarPreview={avatarPreview}
                             onAvatarChange={handleAvatarChange}
+                            onSave={handleSaveAccount}
+                            loading={accountLoading}
+                            status={accountStatus}
                         />
                     )}
 
@@ -215,6 +292,9 @@ export default function SettingsModal({ isOpen, onClose }) {
                             setNewPassword={setNewPassword}
                             confirmPassword={confirmPassword}
                             setConfirmPassword={setConfirmPassword}
+                            onSave={handleSaveSecurity}
+                            loading={securityLoading}
+                            status={securityStatus}
                         />
                     )}
                 </div>

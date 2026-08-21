@@ -3,10 +3,12 @@ package com.nycolas.realtime_chat_api.controller;
 import com.nycolas.realtime_chat_api.domain.User;
 import com.nycolas.realtime_chat_api.dto.UserRequestDTO;
 import com.nycolas.realtime_chat_api.dto.UserResponseDTO;
+import com.nycolas.realtime_chat_api.dto.UserSettingsRequestDTO; // <-- Importação do novo DTO
 import com.nycolas.realtime_chat_api.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication; // <-- Importação da Autenticação
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,5 +46,19 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.ok(responseList);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<Void> updateSettings(
+            @RequestBody UserSettingsRequestDTO request,
+            Authentication authentication) {
+
+        // Pega o e-mail do usuário pelo token JWT
+        String userEmail = authentication.getName();
+
+        // Repassa para o Service processar
+        userService.updateUserSettings(userEmail, request);
+
+        return ResponseEntity.ok().build();
     }
 }

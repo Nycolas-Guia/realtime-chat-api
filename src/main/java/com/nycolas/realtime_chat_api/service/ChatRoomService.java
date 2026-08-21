@@ -62,21 +62,18 @@ public class ChatRoomService {
      * Adiciona um usuário existente a uma sala de chat.
      */
     @Transactional
-    public void addMember(UUID roomId, String userEmail) {
+    public void addMember(UUID roomId, String username) {
         // Usa a busca com JOIN FETCH para garantir que os membros venham carregados na sessão
         ChatRoom room = chatRoomRepository.findByIdWithMembers(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
 
-        UserDetails userDetails = userRepository.findByEmail(userEmail);
-        if (userDetails == null) {
-            throw new IllegalArgumentException("Usuário com e-mail " + userEmail + " não encontrado.");
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new IllegalArgumentException("Usuário @" + username + " não encontrado.");
         }
 
-        User user = (User) userDetails;
-
-        // Adiciona o usuário na lista (agora a coleção está inicializada com sucesso!)
         room.getMembers().add(user);
-
         chatRoomRepository.save(room);
     }
 }
