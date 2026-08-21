@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import ChatBubble from "../components/ChatBubble";
 import InputBar from "../components/InputBar";
+import InviteMemberModal from "../components/InviteMemberModal";
 import { useAuth } from "../context/AuthContext";
 import { useWebSocket } from "../hooks/useWebSocket";
 import api from "../services/api";
@@ -21,6 +22,7 @@ export default function ChatPage() {
     const [activeRoomId, setActiveRoomId] = useState(null);
     const [history, setHistory] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
 
     const { messages: realtimeMessages, connected } = useWebSocket(activeRoomId);
     const messagesEndRef = useRef(null);
@@ -84,6 +86,19 @@ export default function ChatPage() {
                     <span className="text-lg text-discord-text-muted">#</span>
                     <h2 className="font-semibold text-white">{activeRoomId}</h2>
 
+                    <button
+                        type="button"
+                        onClick={() => setIsInviteOpen(true)}
+                        disabled={!activeRoomId}
+                        className="ml-4 flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium text-discord-text-muted hover:bg-discord-bg-input hover:text-discord-text-normal disabled:cursor-not-allowed disabled:opacity-50"
+                        title="Convidar Membro"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-7a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        Convidar
+                    </button>
+
                     <span
                         className={`ml-auto flex items-center gap-1.5 text-xs ${
                             connected ? "text-discord-green" : "text-discord-text-muted"
@@ -137,6 +152,12 @@ export default function ChatPage() {
                     disabled={!connected}
                 />
             </main>
+
+            <InviteMemberModal
+                isOpen={isInviteOpen}
+                onClose={() => setIsInviteOpen(false)}
+                roomName={activeRoomId}
+            />
         </div>
     );
 }
