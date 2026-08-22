@@ -94,4 +94,8 @@ public class User implements UserDetails {
 
     public Set<ChatRoom> getRooms() { return rooms; }
     public void setRooms(Set<ChatRoom> rooms) { this.rooms = rooms; }
+
+    public String getAppUsername() {
+        return this.username;
+    }
 }

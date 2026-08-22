@@ -10,6 +10,7 @@ public record UserResponseDTO(
 ) {
 
     public UserResponseDTO(User user) {
-        this(user.getId(), user.getRealUsername(), user.getEmail());
+        this(user.getId(), user.getAppUsername(), user.getEmail());
+
     }
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 
 const AuthContext = createContext(null);
@@ -11,6 +11,19 @@ export function AuthProvider({ children }) {
     const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // Movido para DENTRO do provider para poder usar o setUser
+    const fetchUserProfile = useCallback(async (currentToken) => {
+        try {
+            const config = currentToken ? { headers: { Authorization: `Bearer ${currentToken}` } } : {};
+            const response = await api.get("/api/users/me", config);
+
+            setUser(response.data);
+            localStorage.setItem(USER_KEY, JSON.stringify(response.data));
+        } catch (err) {
+            console.error("Erro ao buscar dados do usuário logado:", err);
+        }
+    }, []);
+
     // Restaura sessão salva no localStorage ao carregar a app
     useEffect(() => {
         const storedToken = localStorage.getItem(TOKEN_KEY);
@@ -19,10 +32,13 @@ export function AuthProvider({ children }) {
         if (storedToken && storedUser) {
             setToken(storedToken);
             setUser(JSON.parse(storedUser));
+
+            // Atualiza os dados silenciosamente em background para garantir que o apelido está atualizado
+            fetchUserProfile(storedToken);
         }
 
         setLoading(false);
-    }, []);
+    }, [fetchUserProfile]);
 
     /**
      * Login: chama o endpoint de autenticação do backend.
@@ -30,15 +46,28 @@ export function AuthProvider({ children }) {
     async function login({ email, password }) {
         const response = await api.post("/api/auth/login", { email, password });
         const jwtToken = response.data.token;
-        const userData = { email };
 
+        // Salva o token para as próximas requisições funcionarem
         localStorage.setItem(TOKEN_KEY, jwtToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(userData));
-
         setToken(jwtToken);
-        setUser(userData);
 
-        return userData;
+        // Busca o perfil completo (agora com username e displayName) do backend
+        try {
+            const profileRes = await api.get("/api/users/me", {
+                headers: { Authorization: `Bearer ${jwtToken}` }
+            });
+            const userData = profileRes.data;
+
+            localStorage.setItem(USER_KEY, JSON.stringify(userData));
+            setUser(userData);
+            return userData;
+        } catch (err) {
+            // Fallback de segurança
+            const fallbackUser = { email };
+            localStorage.setItem(USER_KEY, JSON.stringify(fallbackUser));
+            setUser(fallbackUser);
+            return fallbackUser;
+        }
     }
 
     /**
@@ -69,6 +98,8 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        fetchUserProfile, // Disponível para uso externo
+        updateUser: setUser, // Permite que o SettingsModal altere a UI na mesma hora
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

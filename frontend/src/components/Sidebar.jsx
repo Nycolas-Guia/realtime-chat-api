@@ -68,7 +68,8 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
     }
 
     // Lógica para descobrir qual nome exibir no rodapé
-    const displayUser = user?.displayName || user?.username || user?.email?.split('@')[0] || "Usuário";
+    const displayName = user?.displayName || user?.username || "Usuário";
+    const username = user?.username ? `@${user.username}` : "";
 
     return (
         <aside className="flex h-full w-60 flex-col bg-discord-bg-secondary">
@@ -155,13 +156,17 @@ export default function Sidebar({ activeRoomId, onSelectRoom }) {
             {/* Perfil do Usuário no rodapé */}
             <div className="flex items-center gap-2 bg-discord-bg-tertiary/60 p-2">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-discord-blurple text-sm font-semibold text-white">
-                    {displayUser.charAt(0)}
+                    {displayName.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-white">
-                        {displayUser}
+                    {/* Apelido em destaque */}
+                    <p className="truncate text-sm font-bold text-white">
+                        {displayName}
                     </p>
-                    <p className="truncate text-xs text-discord-text-muted">Online</p>
+                    {/* Username pequeno embaixo */}
+                    <p className="truncate text-[11px] text-discord-text-muted">
+                        {username}
+                    </p>
                 </div>
                 <button
                     type="button"

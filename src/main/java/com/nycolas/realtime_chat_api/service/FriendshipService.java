@@ -84,8 +84,8 @@ public class FriendshipService {
         // Mapeia para o DTO (mostrando os dados de quem ENVIOU o convite)
         return pending.stream().map(f -> new FriendResponseDTO(
                 f.getId(),
-                f.getSender().getUsername(),
-                f.getSender().getDisplayName() != null ? f.getSender().getDisplayName() : f.getSender().getUsername(),
+                f.getSender().getAppUsername(),
+                f.getSender().getDisplayName() != null ? f.getSender().getDisplayName() : f.getSender().getAppUsername(),
                 f.getStatus().name()
         )).collect(Collectors.toList());
     }
@@ -100,8 +100,8 @@ public class FriendshipService {
             User friend = f.getSender().getId().equals(me.getId()) ? f.getReceiver() : f.getSender();
             return new FriendResponseDTO(
                     f.getId(),
-                    friend.getUsername(),
-                    friend.getDisplayName() != null ? friend.getDisplayName() : friend.getUsername(),
+                    friend.getAppUsername(),
+                    friend.getDisplayName() != null ? friend.getDisplayName() : friend.getAppUsername(),
                     f.getStatus().name()
             );
         }).collect(Collectors.toList());

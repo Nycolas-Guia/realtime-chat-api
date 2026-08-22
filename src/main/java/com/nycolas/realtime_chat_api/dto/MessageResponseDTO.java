@@ -20,7 +20,7 @@ public record MessageResponseDTO(
                 // LÓGICA DE EXIBIÇÃO: Tem apelido? Usa ele. Não tem? Usa o username.
                 (message.getSender().getDisplayName() != null && !message.getSender().getDisplayName().trim().isEmpty())
                         ? message.getSender().getDisplayName()
-                        : message.getSender().getUsername(),
+                        : message.getSender().getAppUsername(),
 
                 message.getTimestamp()
         );

@@ -157,16 +157,16 @@ function SecuritySection({ currentPassword, setCurrentPassword, newPassword, set
 }
 
 export default function SettingsModal({ isOpen, onClose }) {
-    const { user } = useAuth();
+    const { user, updateUser, logout } = useAuth();
 
-    const [activeSection, setActiveSection] = useState("account");
 
     // Estados da Minha Conta
     const [displayName, setDisplayName] = useState(user?.displayName ?? user?.username ?? "");
-    const email = user?.email ?? "";
-    const [avatarPreview, setAvatarPreview] = useState(null);
     const [accountLoading, setAccountLoading] = useState(false);
     const [accountStatus, setAccountStatus] = useState({ type: "", message: "" });
+    const email = user?.email ?? "";
+    const [avatarPreview, setAvatarPreview] = useState(null);
+    const [activeSection, setActiveSection] = useState("account");
 
     // Estados da Segurança (Senha)
     const [currentPassword, setCurrentPassword] = useState("");
@@ -181,21 +181,23 @@ export default function SettingsModal({ isOpen, onClose }) {
         const file = e.target.files?.[0];
         if (!file) return;
         setAvatarPreview(URL.createObjectURL(file));
-        // Nota: O envio real do arquivo para o backend exigiria um upload Multipart/FormData.
-        // Vamos focar no envio do texto (displayName) por enquanto.
     };
 
     // --- CONEXÃO AXIOS: Salvar Apelido ---
     const handleSaveAccount = async (e) => {
         e.preventDefault();
-        setAccountStatus({ type: "", message: "" });
+        setAccountStatus({type: "", message: ""});
         setAccountLoading(true);
 
         try {
-            await api.put("/api/users/me", { displayName });
-            setAccountStatus({ type: "success", message: "Perfil atualizado com sucesso!" });
+            await api.put("/api/users/me", {displayName});
+
+            // Atualiza o estado global imediatamente para refletir na Sidebar
+            updateUser((prev) => ({...prev, displayName}));
+
+            setAccountStatus({type: "success", message: "Perfil atualizado com sucesso!"});
         } catch (error) {
-            setAccountStatus({ type: "error", message: "Erro ao atualizar o perfil." });
+            setAccountStatus({type: "error", message: "Erro ao atualizar o perfil."});
         } finally {
             setAccountLoading(false);
         }
